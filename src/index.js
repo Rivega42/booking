@@ -18,7 +18,7 @@ app.use(express.static(join(__dirname, '../public')));
 // API routes
 app.use('/api', apiRoutes);
 
-// Serve frontend for all other routes
+// Serve frontend
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../public/index.html'));
 });
