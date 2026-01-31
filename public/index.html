@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Забронировать встречу</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📅 Забронировать встречу</h1>
+      <p class="subtitle">с <span id="owner-name">...</span></p>
+    </header>
+
+    <main>
+      <!-- Step 1: Select Date -->
+      <section id="step-date" class="step active">
+        <h2>Выберите дату</h2>
+        <div id="calendar" class="calendar"></div>
+      </section>
+
+      <!-- Step 2: Select Time -->
+      <section id="step-time" class="step">
+        <h2>Выберите время <span id="selected-date"></span></h2>
+        <div id="time-slots" class="time-slots"></div>
+        <button class="btn-back" onclick="goBack('date')">← Назад</button>
+      </section>
+
+      <!-- Step 3: Enter Details -->
+      <section id="step-details" class="step">
+        <h2>Ваши данные</h2>
+        <p class="selected-slot" id="selected-slot-display"></p>
+        <form id="booking-form">
+          <div class="form-group">
+            <label for="name">Имя *</label>
+            <input type="text" id="name" name="name" required placeholder="Иван Иванов">
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required placeholder="ivan@example.com">
+          </div>
+          <div class="form-group">
+            <label for="topic">Тема встречи</label>
+            <input type="text" id="topic" name="topic" placeholder="О чём хотите поговорить?">
+          </div>
+          <button type="submit" class="btn-primary" id="submit-btn">Забронировать</button>
+        </form>
+        <button class="btn-back" onclick="goBack('time')">← Назад</button>
+      </section>
+
+      <!-- Step 4: Success -->
+      <section id="step-success" class="step">
+        <div class="success-message">
+          <h2>✅ Готово!</h2>
+          <p>Встреча успешно забронирована.</p>
+          <p>Приглашение отправлено на ваш email.</p>
+          <div id="event-details"></div>
+          <button class="btn-primary" onclick="location.reload()">Забронировать ещё</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Powered by <a href="https://github.com/Rivega42/booking" target="_blank">Booking</a></p>
+    </footer>
+  </div>
+
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
