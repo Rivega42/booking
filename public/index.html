@@ -3,67 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Забронировать встречу</title>
+  <title>Book a meeting</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📅 Забронировать встречу</h1>
-      <p class="subtitle">с <span id="owner-name">...</span></p>
-    </header>
+  <div class="cal-container">
+    <!-- Left Column: Event Info -->
+    <aside class="event-info">
+      <div class="avatar" id="avatar"></div>
+      <h1 class="owner-name" id="owner-name">Loading...</h1>
+      <h2 class="event-type">30 Minute Meeting</h2>
+      
+      <div class="event-meta">
+        <div class="meta-item">
+          <svg class="icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 14.5C11.5899 14.5 14.5 11.5899 14.5 8C14.5 4.41015 11.5899 1.5 8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 4V8L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span id="duration">30 min</span>
+        </div>
+        <div class="meta-item">
+          <svg class="icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 4V8H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span id="timezone">Loading...</span>
+        </div>
+      </div>
+      
+      <p class="event-description" id="description">
+        Book a 30-minute meeting to discuss your project, collaboration, or any questions you have.
+      </p>
+    </aside>
 
-    <main>
-      <!-- Step 1: Select Date -->
-      <section id="step-date" class="step active">
-        <h2>Выберите дату</h2>
-        <div id="calendar" class="calendar"></div>
-      </section>
+    <!-- Right Column: Calendar & Slots -->
+    <main class="booking-area">
+      <!-- Step 1: Calendar -->
+      <div id="calendar-view" class="booking-step active">
+        <div class="calendar-header">
+          <button class="nav-btn" id="prev-month" aria-label="Previous month">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <h3 class="month-title" id="month-title">January 2024</h3>
+          <button class="nav-btn" id="next-month" aria-label="Next month">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="calendar-grid" id="calendar-grid"></div>
+      </div>
 
-      <!-- Step 2: Select Time -->
-      <section id="step-time" class="step">
-        <h2>Выберите время <span id="selected-date"></span></h2>
-        <div id="time-slots" class="time-slots"></div>
-        <button class="btn-back" onclick="goBack('date')">← Назад</button>
-      </section>
+      <!-- Step 2: Time Slots -->
+      <div id="slots-view" class="booking-step">
+        <button class="back-btn" id="back-to-calendar">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span id="selected-date-display">Back</span>
+        </button>
+        
+        <div class="slots-container" id="slots-container"></div>
+      </div>
 
-      <!-- Step 3: Enter Details -->
-      <section id="step-details" class="step">
-        <h2>Ваши данные</h2>
-        <p class="selected-slot" id="selected-slot-display"></p>
-        <form id="booking-form">
-          <div class="form-group">
-            <label for="name">Имя *</label>
-            <input type="text" id="name" name="name" required placeholder="Иван Иванов">
+      <!-- Step 3: Booking Form -->
+      <div id="form-view" class="booking-step">
+        <button class="back-btn" id="back-to-slots">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Back to slots
+        </button>
+        
+        <div class="selected-slot-info" id="selected-slot-info"></div>
+        
+        <form id="booking-form" class="booking-form">
+          <div class="form-field">
+            <label for="name">Your name *</label>
+            <input type="text" id="name" name="name" required placeholder="John Doe">
           </div>
-          <div class="form-group">
-            <label for="email">Email *</label>
-            <input type="email" id="email" name="email" required placeholder="ivan@example.com">
+          
+          <div class="form-field">
+            <label for="email">Email address *</label>
+            <input type="email" id="email" name="email" required placeholder="john@example.com">
           </div>
-          <div class="form-group">
-            <label for="topic">Тема встречи</label>
-            <input type="text" id="topic" name="topic" placeholder="О чём хотите поговорить?">
+          
+          <div class="form-field">
+            <label for="topic">Notes / Topic</label>
+            <textarea id="topic" name="topic" rows="3" placeholder="Please share anything that will help prepare for our meeting"></textarea>
           </div>
-          <button type="submit" class="btn-primary" id="submit-btn">Забронировать</button>
+          
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <span>Schedule Event</span>
+          </button>
         </form>
-        <button class="btn-back" onclick="goBack('time')">← Назад</button>
-      </section>
+      </div>
 
       <!-- Step 4: Success -->
-      <section id="step-success" class="step">
-        <div class="success-message">
-          <h2>✅ Готово!</h2>
-          <p>Встреча успешно забронирована.</p>
-          <p>Приглашение отправлено на ваш email.</p>
-          <div id="event-details"></div>
-          <button class="btn-primary" onclick="location.reload()">Забронировать ещё</button>
+      <div id="success-view" class="booking-step">
+        <div class="success-card">
+          <div class="success-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="22" fill="#10B981" opacity="0.1"/>
+              <path d="M16 24L22 30L32 18" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>This meeting is scheduled</h2>
+          <p>A calendar invitation has been sent to your email address.</p>
+          <div id="event-details" class="event-details"></div>
+          <button class="submit-btn" onclick="location.reload()">Book another meeting</button>
         </div>
-      </section>
+      </div>
     </main>
-
-    <footer>
-      <p>Powered by <a href="https://github.com/Rivega42/booking" target="_blank">Booking</a></p>
-    </footer>
   </div>
 
   <div id="loading" class="loading hidden">
