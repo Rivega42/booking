@@ -4,12 +4,11 @@ import config from '../config/index.js';
 
 const execAsync = promisify(exec);
 
-// GOG CLI wrapper - uses installed gogcli with keyring
-const GOG_ENV = `GOG_KEYRING_PASSWORD="${process.env.GOG_KEYRING_PASSWORD || 'openclaw123'}"`;
+const CALENDAR_ID = config.booking.ownerEmail;
 
-async function runGog(command) {
-  const { stdout, stderr } = await execAsync(`${GOG_ENV} gog ${command} --json`);
-  if (stderr) console.error('gog stderr:', stderr);
+async function runGog(args) {
+  const cmd = `GOG_KEYRING_PASSWORD="${process.env.GOG_KEYRING_PASSWORD || ''}" gog ${args}`;
+  const { stdout } = await execAsync(cmd);
   return JSON.parse(stdout);
 }
 
@@ -20,8 +19,10 @@ export async function getEvents(startDate, endDate) {
   try {
     const start = startDate.toISOString().split('T')[0];
     const end = endDate.toISOString().split('T')[0];
-    const result = await runGog(`calendar events list --from "${start}" --to "${end}" --max 100`);
-    return result.events || result || [];
+    const result = await runGog(
+      `calendar events ${CALENDAR_ID} --from "${start}" --to "${end}" --max 200 --json`
+    );
+    return result.events || [];
   } catch (error) {
     console.error('Failed to get events:', error.message);
     return [];
@@ -34,44 +35,42 @@ export async function getEvents(startDate, endDate) {
 export async function getAvailableSlots(startDate, endDate) {
   const events = await getEvents(startDate, endDate);
   const slots = [];
-  
-  // Convert events to busy times
+
   const busyTimes = events.map(event => ({
     start: new Date(event.start?.dateTime || event.start?.date || event.start),
     end: new Date(event.end?.dateTime || event.end?.date || event.end),
   }));
-  
+
   const current = new Date(startDate);
   const end = new Date(endDate);
-  
+
   while (current < end) {
     const dayOfWeek = current.getDay();
-    // Convert JS day (0=Sun) to config format (1=Mon...7=Sun)
     const configDay = dayOfWeek === 0 ? 7 : dayOfWeek;
-    
+
     if (config.booking.workingDays.includes(configDay)) {
       for (let hour = config.booking.workingHoursStart; hour < config.booking.workingHoursEnd; hour++) {
         for (let minute = 0; minute < 60; minute += config.booking.slotDuration) {
           const slotStart = new Date(current);
           slotStart.setHours(hour, minute, 0, 0);
-          
+
           const slotEnd = new Date(slotStart);
           slotEnd.setMinutes(slotEnd.getMinutes() + config.booking.slotDuration);
-          
-          // Check minimum notice
+
+          // Minimum notice
           const minNotice = new Date();
           minNotice.setHours(minNotice.getHours() + config.booking.minNoticeHours);
           if (slotStart < minNotice) continue;
-          
-          // Check conflicts with buffers
+
+          // Check conflicts
           const isConflict = busyTimes.some(busy => {
-            const busyStart = new Date(busy.start);
-            const busyEnd = new Date(busy.end);
-            busyStart.setMinutes(busyStart.getMinutes() - config.booking.bufferBefore);
-            busyEnd.setMinutes(busyEnd.getMinutes() + config.booking.bufferAfter);
-            return slotStart < busyEnd && slotEnd > busyStart;
+            const bs = new Date(busy.start);
+            const be = new Date(busy.end);
+            bs.setMinutes(bs.getMinutes() - config.booking.bufferBefore);
+            be.setMinutes(be.getMinutes() + config.booking.bufferAfter);
+            return slotStart < be && slotEnd > bs;
           });
-          
+
           if (!isConflict) {
             slots.push({
               start: slotStart.toISOString(),
@@ -81,31 +80,36 @@ export async function getAvailableSlots(startDate, endDate) {
         }
       }
     }
-    
+
     current.setDate(current.getDate() + 1);
     current.setHours(0, 0, 0, 0);
   }
-  
+
   return slots;
 }
 
 /**
- * Create a calendar event
+ * Create a calendar event (safe shell escaping)
  */
 export async function createEvent({ title, description, startTime, endTime, attendeeEmail, attendeeName }) {
-  try {
-    const start = new Date(startTime).toISOString();
-    const end = new Date(endTime).toISOString();
-    
-    const result = await runGog(
-      `calendar events create "${title}" --from "${start}" --to "${end}" --description "${description.replace(/"/g, '\\"')}"`
-    );
-    
-    return result;
-  } catch (error) {
-    console.error('Failed to create event:', error.message);
-    throw error;
-  }
+  // Sanitize inputs for shell
+  const safeTitle = title.replace(/["`$\\]/g, '');
+  const safeDesc = description.replace(/["`$\\]/g, '').replace(/\n/g, ' | ');
+  const start = new Date(startTime).toISOString();
+  const end = new Date(endTime).toISOString();
+
+  const args = [
+    `calendar create ${CALENDAR_ID}`,
+    `--summary "${safeTitle}"`,
+    `--from "${start}"`,
+    `--to "${end}"`,
+    `--description "${safeDesc}"`,
+    attendeeEmail ? `--attendees "${attendeeEmail}"` : '',
+    '--json',
+  ].filter(Boolean).join(' ');
+
+  const result = await runGog(args);
+  return result;
 }
 
 export default { getEvents, getAvailableSlots, createEvent };
